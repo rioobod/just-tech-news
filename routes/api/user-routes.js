@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const { User } = require('../../models');
+const { User, Post } = require('../../models');
 
 // get all users
 router.get('/', (req, res) => {
@@ -14,24 +14,30 @@ router.get('/', (req, res) => {
 });
 
 router.get('/:id', (req, res) => {
-  User.findOne({
-    attributes: { exclude: ['password'] },
-    where: {
-      id: req.params.id
-    }
-  })
-    .then(dbUserData => {
-      if (!dbUserData) {
-        res.status(404).json({ message: 'No user found with this id' });
-        return;
-      }
-      res.json(dbUserData);
+    User.findOne({
+      attributes: { exclude: ['password'] },
+      where: {
+        id: req.params.id
+      },
+      include: [
+        {
+          model: Post,
+          attributes: ['id', 'title', 'post_url', 'created_at']
+        }
+      ]
     })
-    .catch(err => {
-      console.log(err);
-      res.status(500).json(err);
-    });
-});
+      .then(dbUserData => {
+        if (!dbUserData) {
+          res.status(404).json({ message: 'No user found with this id' });
+          return;
+        }
+        res.json(dbUserData);
+      })
+      .catch(err => {
+        console.log(err);
+        res.status(500).json(err);
+      });
+  });
 
 router.post('/', (req, res) => {
   User.create({
@@ -47,7 +53,7 @@ router.post('/', (req, res) => {
 });
 
 router.post('/login', (req, res) => {
-    // expects {email: 'lernantino@gmail.com', password: 'password1234'}
+    // expects {email: 'address@gmail.com', password: 'password1234'}
     User.findOne({
       where: {
         email: req.body.email
@@ -77,7 +83,6 @@ router.put('/:id', (req, res) => {
         id: req.params.id
       }
     })
-
 
     .then(dbUserData => {
       if (!dbUserData[0]) {
